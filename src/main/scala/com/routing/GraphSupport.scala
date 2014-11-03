@@ -10,6 +10,10 @@ class GraphSupport(val graph: GraphDatabaseService) {
     GlobalGraphOperations.at(graph).getAllNodesWithLabel(Shop).toList.find(_.getProperty("name") == shop)
   }
 
+  def findDestination(destination: String):Option[Node] = {
+    GlobalGraphOperations.at(graph).getAllNodesWithLabel(Destination).toList.find(_.getProperty("name") == destination)
+  }
+
   def setOrder(shop: String, destination: String, timeFromShopToDestination: Int, numbers: Int) {
     val tx = graph.beginTx()
     val shopNode = findShop(shop).getOrElse({
@@ -18,7 +22,7 @@ class GraphSupport(val graph: GraphDatabaseService) {
       node
     })
 
-    val destinationNode = findShop(destination).getOrElse({
+    val destinationNode = findDestination(destination).getOrElse({
       val node = graph.createNode(Destination)
       node.setProperty("name", destination)
       node
