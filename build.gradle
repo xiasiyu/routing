@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'scala'
+
+sourceCompatibility = 1.5
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.neo4j:neo4j-kernel:2.1.5"
+    compile "org.neo4j:neo4j-graph-algo:2.1.5"
+    compile "com.typesafe.slick:slick_2.10:2.0.0-M3"
+    compile "org.clojars.gukjoon:ojdbc:1.4"
+    runtime "org.neo4j:neo4j-lucene-index:2.1.5"
+    testCompile 'org.mockito:mockito-all:1.9.5'
+
+    testCompile "junit:junit:4.11"
+    testCompile "org.scalatest:scalatest_2.10:3.0.0-SNAP1"
+    testCompile "org.scalactic:scalactic_2.10:3.0.0-SNAP1"
+    testCompile "org.scalacheck:scalacheck_2.10:1.11.6"
+}
