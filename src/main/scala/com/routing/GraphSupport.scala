@@ -6,27 +6,20 @@ import scala.collection.JavaConversions._
 
 class GraphSupport(val graph: GraphDatabaseService) {
 
-  def findShop(shop: String):Option[Node] = {
-    GlobalGraphOperations.at(graph).getAllNodesWithLabel(Shop).toList.find(_.getProperty("name") == shop)
+  def findNode(name: String, label: Label) = {
+    GlobalGraphOperations.at(graph).getAllNodesWithLabel(label).toList.find(_.getProperty("name") == name)
   }
 
-  def findDestination(destination: String):Option[Node] = {
-    GlobalGraphOperations.at(graph).getAllNodesWithLabel(Destination).toList.find(_.getProperty("name") == destination)
+  def createNode(name: String, label: Label): Node = {
+    val node: Node = graph.createNode(label)
+    node.setProperty("name", name)
+    node
   }
 
   def setOrder(shop: String, destination: String, timeFromShopToDestination: Int, numbers: Int) {
     val tx = graph.beginTx()
-    val shopNode = findShop(shop).getOrElse({
-      val node = graph.createNode(Shop)
-      node.setProperty("name", shop)
-      node
-    })
-
-    val destinationNode = findDestination(destination).getOrElse({
-      val node = graph.createNode(Destination)
-      node.setProperty("name", destination)
-      node
-    })
+    val shopNode = findNode(shop, Shop).getOrElse(createNode(shop, Shop))
+    val destinationNode = findNode(destination, Destination).getOrElse(createNode(destination, Destination))
 
     val to = shopNode.createRelationshipTo(destinationNode, DeliveryPath)
     to.setProperty("time", timeFromShopToDestination)
@@ -37,7 +30,7 @@ class GraphSupport(val graph: GraphDatabaseService) {
 
   def getOrderDeliveryTime(order: Order): Int = {
     val tx: Transaction = graph.beginTx()
-    val shopNode = findShop(order.shop).get
+    val shopNode = findNode(order.shop, Shop).get
     val time = shopNode.getRelationships(Direction.OUTGOING, DeliveryPath).toList.find(_.getEndNode.getProperty("name") == order.destination).get.getProperty("time").toString.toInt
     tx.success()
     tx.close()
