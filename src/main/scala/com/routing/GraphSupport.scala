@@ -4,7 +4,7 @@ import org.neo4j.graphdb._
 import org.neo4j.tooling.GlobalGraphOperations
 import scala.collection.JavaConversions._
 
-class GraphSupport(val graph: GraphDatabaseService) {
+class GraphSupport(val graph: GraphDatabaseService) extends TransactionSupport {
 
   def findNode(name: String, label: Label) = {
     GlobalGraphOperations.at(graph).getAllNodesWithLabel(label).toList.find(_.getProperty("name") == name)
@@ -16,25 +16,18 @@ class GraphSupport(val graph: GraphDatabaseService) {
     node
   }
 
-  def setOrder(shop: String, destination: String, timeFromShopToDestination: Int, numbers: Int) {
-    val tx = graph.beginTx()
+  def setOrder(shop: String, destination: String, timeFromShopToDestination: Int, numbers: Int) = transaction(graph) {
     val shopNode = findNode(shop, Shop).getOrElse(createNode(shop, Shop))
     val destinationNode = findNode(destination, Destination).getOrElse(createNode(destination, Destination))
 
     val to = shopNode.createRelationshipTo(destinationNode, DeliveryPath)
     to.setProperty("time", timeFromShopToDestination)
     to.setProperty("numbers", numbers)
-    tx.success()
-    tx.close()
   }
 
-  def getOrderDeliveryTime(order: Order): Int = {
-    val tx: Transaction = graph.beginTx()
+  def getOrderDeliveryTime(order: Order): Int = transaction(graph) {
     val shopNode = findNode(order.shop, Shop).get
-    val time = shopNode.getRelationships(Direction.OUTGOING, DeliveryPath).toList.find(_.getEndNode.getProperty("name") == order.destination).get.getProperty("time").toString.toInt
-    tx.success()
-    tx.close()
-    time
+    shopNode.getRelationships(Direction.OUTGOING, DeliveryPath).toList.find(_.getEndNode.getProperty("name") == order.destination).get.getProperty("time").toString.toInt
   }
 
   def close() {
